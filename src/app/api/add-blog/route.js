@@ -3,6 +3,7 @@ import Blog from "@/models/blog";
 import Joi from "joi";
 import { NextResponse } from "next/server";
 
+// Joi schema for validation
 const AddNewBlog = Joi.object({
     title: Joi.string().required(),
     description: Joi.string().required(),
@@ -10,9 +11,13 @@ const AddNewBlog = Joi.object({
 
 export const POST = async (req) => {
     try {
+        // Connect to the database
         await connectDB();
+
+        // Parse JSON from the request body
         const { title, description } = await req.json();
 
+        // Validate the request data
         const { error } = AddNewBlog.validate({ title, description });
         if (error) {
             return NextResponse.json(
@@ -24,9 +29,10 @@ export const POST = async (req) => {
             );
         }
 
-        // Save the blog to the database 
+        // Save the blog to the database
         const newBlog = await Blog.create({ title, description });
 
+        // Check if the blog was created successfully
         if (!newBlog) {
             return NextResponse.json(
                 {
@@ -36,7 +42,8 @@ export const POST = async (req) => {
                 { status: 500 }
             );
         }
-        // and return the response
+
+        // Return the response for successful creation
         return NextResponse.json(
             {
                 success: true,
@@ -45,13 +52,9 @@ export const POST = async (req) => {
             { status: 201 }
         );
 
-
-
-
-
-
     } catch (error) {
-        console.log(error);
+        // Log the error details for debugging
+        console.error("Error in POST /api/add-blog:", error);
         return NextResponse.json(
             {
                 success: false,
