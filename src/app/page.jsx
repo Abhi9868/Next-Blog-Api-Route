@@ -3,19 +3,26 @@
 import React, { useEffect, useState } from "react";
 import BlogCard from "@/components/BlogCard";
 import { useRouter } from "next/navigation";
+import SkeletonBlogCard from "@/components/Skeleton";
+
 
 const BlogsPage = () => {
   const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const fetchBlogs = async () => {
     try {
-      const res = await fetch("/api/get-blogs");
+      const res = await fetch("/api/get-blogs", {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to fetch blogs");
       const data = await res.json();
       setBlogs(data.data);
     } catch (error) {
       console.error("Error fetching blogs:", error);
+    } finally {
+      setLoading(false); // Set loading to false once data is fetched
     }
   };
 
@@ -61,15 +68,22 @@ const BlogsPage = () => {
         </button>
       </div>
       <div className="flex flex-wrap justify-center gap-4 mx-auto max-w-screen-lg">
-        {blogs.map((blog) => (
-          <div key={blog._id} className="bg-gray-800 rounded-lg shadow-lg p-4 transition-transform transform hover:scale-105">
-            <BlogCard
-              blog={blog}
-              onDelete={() => handleDelete(blog._id)}
-              onEdit={() => handleEdit(blog._id)}
-            />
-          </div>
-        ))}
+        {loading ? (
+          // Render skeleton cards while loading
+          Array.from({ length: 6 }).map((_, index) => (
+            <SkeletonBlogCard key={index} />
+          ))
+        ) : (
+          blogs.map((blog) => (
+            <div key={blog._id} className="bg-gray-800 rounded-lg shadow-lg p-4 transition-transform transform hover:scale-105">
+              <BlogCard
+                blog={blog}
+                onDelete={() => handleDelete(blog._id)}
+                onEdit={() => handleEdit(blog._id)}
+              />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
